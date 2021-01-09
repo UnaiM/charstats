@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang=en>
+  <head>
+    <meta charset=utf-8>
+    <title>DDB character stats</title>
+    <style>
+
+body {
+  background-color: transparent !important;
+  font-family: sans-serif;
+  margin: 0;
+  font-size: 1.1em;
+}
+table {
+  border-collapse: collapse;
+}
+@keyframes beat {
+  from {background-color: rgba(0, 128, 255, 20%);}
+  to {background-color: inherit;}
+}
+.beat td:not(.barcell) {
+  animation-name: beat;
+  animation-duration: 1.5s;
+}
+td {
+  padding: 0 1em;
+  border-bottom: 1px solid #60666f;
+  border-right: 1px solid #60666f;
+  margin-bottom: -1px;
+}
+.barcell {
+  display: block;
+  position: relative;
+  width: 500px;
+  height: 70px;
+  overflow: hidden;
+  padding: 0;
+}
+.hpshadow {
+  width: 40%;
+  height: 20%;
+	border-radius: 9999em;
+  background-color: rgba(60, 20, 0, 50%);
+	box-shadow: 0 0 0.2em rgba(60, 20, 0, 100%);
+  position: absolute;
+  left: 6%;
+  top: 40%;
+  margin: 0;
+}
+.hpavail {
+  width: 100%;
+  height: 100%;
+	border-radius: 9999em;
+	padding: 0.1em;
+  margin: -0.2em;
+  border: 0.1em solid transparent;
+  transition: width 0.5s, box-shadow: 0.5s;
+}
+.hpmark {
+  position: absolute;
+  width: 2px;
+  height: 250%;
+  left: 100%;
+  top: -75%;
+  background-image: linear-gradient(to top, rgba(255, 255, 255, 0%) 0%, rgba(255, 255, 255, 100%) 30%, rgba(255, 255, 255, 0%) 50%, rgba(255, 255, 255, 100%) 70%, rgba(255, 255, 255, 0%) 100%);
+  transition: opacity 0.5s;
+}
+.hpcurrent {
+  position: absolute;
+  top: 0;
+  left: -1px;
+  height: 100%;
+  border-radius: 9999em;
+  box-shadow: inset 0 0.1em 0.2em rgba(255, 255, 255, 40%), inset 0 -0.1em 0.2em rgba(0, 0, 0, 40%);
+  transition: width 0.5s, background-color 0.5s;
+  background-image: linear-gradient(to top, rgba(0, 0, 0, 50%) 0%, rgba(255, 255, 255, 20%) 100%);
+  margin-right: -2px;
+}
+.hptemp {
+  position: absolute;
+  top: 12%;
+  height: 70%;
+  border-radius: 9999em;
+  transition: width 0.5s, margin-left 0.5s;
+  background-color: #eff;
+  box-shadow: 0 0 0.5em #3df;
+}
+.right, .slash, .parenth, .plus {
+  text-align: right;
+}
+.right, .slash, .parenth {
+  border-right: none;
+  padding-right: 0.3em;
+}
+.slash, .parenth, .plus {
+  position: relative;
+  padding-left: 0.3em;
+}
+.slash::before, .parenth::before, .parenth::after, .plus::before {
+  display: block;
+  position: absolute;
+}
+.parenth:empty::before, .parenth:empty::after, .plus:empty::before {
+  display: none;
+}
+.slash::before {
+  content: '/';
+  left: -0.1em;
+}
+.parenth::before {
+  content: '(';
+  left: 0;
+}
+.parenth {
+  padding-right: 0.8em;
+}
+.parenth::after {
+  content: ')';
+  right: 0.45em;
+  top: 50%;
+  margin-top: -0.62em;
+}
+.plus::before {
+  content: '+';
+  left: -0.25em;
+}
+
+    </style>
+  </head>
+  <body>
+    <table id=table></table>
+    <p id=help style='display: none'>Expected usage:<br>
+      <code><span id=thisurl></span>?<mark>123456</mark>,<mark>7890123</mark>,<mark>45678</mark></code><br><br>
+      Each comma-separated number is a D&D Beyond character ID, which you can find in the character sheet URL:<br>
+      <code>https://www.dndbeyond.com/profile/UserName/characters/<mark>1234567</mark></code><br>
+      <code>https://ddb.ac/characters/<mark>876543</mark>/aBcDe</code></p>
+    <script>
+
+// Dummy stuff to make the copied code below  work (too purist maybe).
+const state_name = 0
+const beyond_caller = {id: 0}
+const state = [[{config: {imports: {classes: true}}}]]
+const result = {set: (k, v) => result[k] = v}
+const object = {id: 0}
+function findObjs() {
+  return [result]
+}
+
+// https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L27-L28
+const _ABILITIES = {1:'STR',2:'DEX',3:'CON',4:'INT',5:'WIS',6:'CHA'};
+const _ABILITY = {'STR': 'strength', 'DEX': 'dexterity', 'CON': 'constitution', 'INT': 'intelligence', 'WIS': 'wisdom', 'CHA': 'charisma'}
+// ------------------------------------------------------------------------------------------------------------------------
+
+function get_level(character) {
+
+  // https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L433-L438
+  let total_level = 0;
+  let monk_level = 0;
+  if(state[state_name][beyond_caller.id].config.imports.classes) {
+      let multiclasses = {};
+      character.classes.forEach((current_class, i) => {
+          total_level += current_class.level;
+  // --------------------------------------------------------------------------------------------------------------------------
+
+      })
+  }
+  return total_level
+}
+
+// https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L1257-L1296
+const loadHitPoints = (character, total_level) => {
+    let hp = Math.floor(character.baseHitPoints + ( total_level * Math.floor( ( ( getTotalAbilityScore(character, 3) - 10 ) / 2 ) ) ) );
+
+    // scan for modifiers except those in items, because we will get those bonuses from the items once they are imported
+    // NOTE: this also handles the problem that Beyond includes modifiers from items that are not currently equipped/attuned
+    let hpLevelBonus = getObjects(character.modifiers, 'subType', 'hit-points-per-level', ['item']).forEach((bonus) => {
+        let level = total_level;
+
+        // Ensure that per-level bonuses from class features only apply for the levels of the class and not the character's total level.
+        let charClasses = character.classes.filter((charClass) => {
+            let output = charClass.definition.classFeatures.findIndex(cF => cF.id == bonus.componentId) >= 0;
+            if(charClass.subclassDefinition != null) {
+                output = output || charClass.subclassDefinition.classFeatures.findIndex(cF => cF.id == bonus.componentId) >= 0;
+            }
+            return output;
+        });
+
+        if(charClasses.length > 0) {
+            level = 0;
+            charClasses.forEach((charClass) => {
+                level += parseInt(charClass.level);
+            });
+        }
+
+        hp += level * bonus.value;
+    });
+
+    let hpAttr = findObjs({ type: 'attribute', characterid: object.id, name: 'hp' })[0];
+    if(hpAttr == null) {
+        createObj('attribute', {
+            characterid: object.id,
+            name: 'hp',
+            current: hp,
+            max: hp
+        });
+    } else {
+        hpAttr.set('current', hp);
+        hpAttr.set('max', hp);
+    }
+}
+// ----------------------------------------------------------------------------------------------------------------------------
+
+// https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L1835-L1879
+const getTotalAbilityScore = (character, scoreId) => {
+    let index = scoreId-1;
+    let base = (character.stats[index].value == null ? 10 : character.stats[index].value),
+        bonus = (character.bonusStats[index].value == null ? 0 : character.bonusStats[index].value),
+        override = (character.overrideStats[index].value == null ? 0 : character.overrideStats[index].value),
+        total = base + bonus,
+        modifiers = getObjects(character, '', _ABILITY[_ABILITIES[scoreId]] + "-score");
+    if(override > 0) total = override;
+    if(modifiers.length > 0) {
+        let used_ids = [];
+        for(let i = 0; i < modifiers.length; i++){
+            if(modifiers[i].type == 'bonus' && used_ids.indexOf(modifiers[i].id) == -1) {
+                total += modifiers[i].value;
+                used_ids.push(modifiers[i].id);
+            }
+        }
+    }
+
+    return total;
+};
+
+//return an array of objects according to key, value, or key and value matching, optionally ignoring objects in array of names
+const getObjects = (obj, key, val, except) => {
+    except = except || [];
+    let objects = [];
+    for (let i in obj) {
+        if (!obj.hasOwnProperty(i)) continue;
+        if (typeof obj[i] == 'object') {
+            if (except.indexOf(i) != -1) {
+                continue;
+            }
+            objects = objects.concat(getObjects(obj[i], key, val));
+        } else
+        //if key matches and value matches or if key matches and value is not passed (eliminating the case where key matches but passed value does not)
+        if (i == key && obj[i] == val || i == key && val == '') { //
+            objects.push(obj);
+        } else if (obj[i] == val && key == ''){
+            //only add if the object is not already in the array
+            if (objects.lastIndexOf(obj) == -1){
+                objects.push(obj);
+            }
+        }
+    }
+    return objects;
+};
+// ----------------------------------------------------------------------------------------------------------------------------
+
+let ids = []
+for (const val of new URLSearchParams(window.location.search).entries()) {
+  if (!val[1] && /^[\d,]+$/.test(val[0])) {
+    ids = val[0].split(',').map(x => parseInt(x))
+    break
+  }
+}
+
+if (!ids.length) {
+  document.getElementById('help').style = ''
+  document.getElementById('thisurl').innerText = `${window.location.protocol}//${window.location.hostname}${window.location.pathname.split(/\/$/)[0]}`
+}
+
+const db = {}
+
+ids.forEach((id) => {
+  const row = document.createElement('tr')
+  document.getElementById('table').appendChild(row)
+  const barcell = document.createElement('td')
+  barcell.classList.add('barcell')
+  row.appendChild(barcell)
+  const hpshadow = document.createElement('div')
+  hpshadow.classList.add('hpshadow')
+  barcell.appendChild(hpshadow)
+  const hpavail = document.createElement('div')
+  hpavail.classList.add('hpavail')
+  hpshadow.appendChild(hpavail)
+  const hpcurrent = document.createElement('div')
+  hpcurrent.classList.add('hpcurrent')
+  hpshadow.appendChild(hpcurrent)
+  const hptemp = document.createElement('div')
+  hptemp.classList.add('hptemp')
+  hpshadow.appendChild(hptemp)
+  const hpmark = document.createElement('div')
+  hpmark.classList.add('hpmark')
+  hpshadow.appendChild(hpmark)
+  const name = document.createElement('td')
+  name.innerText = 'Loading…'
+  row.appendChild(name)
+  const right = document.createElement('td')
+  right.classList.add('right')
+  row.appendChild(right)
+  const slash = document.createElement('td')
+  slash.classList.add('slash')
+  row.appendChild(slash)
+  const parenth = document.createElement('td')
+  parenth.classList.add('parenth')
+  row.appendChild(parenth)
+  const plus = document.createElement('td')
+  plus.classList.add('plus')
+  row.appendChild(plus)
+
+  const xhr = new XMLHttpRequest();
+  xhr.responseType = 'json'
+  xhr.timeout = 10000
+
+  let send_ = true
+  function send() {
+    const inter = window.setInterval(function() {
+      if (send_) {
+        window.clearInterval(inter)
+        send_ = false
+        window.setTimeout(function() {
+          send_ = true
+        }, 2000)
+        xhr.open('GET', `https://cors-anywhere.herokuapp.com/https://character-service.dndbeyond.com/character/v4/character/${id}`)
+        xhr.send()
+      }
+    }, 200)
+  }
+
+  let current = null
+  let max = null
+  let natural = null
+  let temp = null
+  xhr.addEventListener('load', function() {
+    loadHitPoints(xhr.response.data, get_level(xhr.response.data))
+    result.name = xhr.response.data.name
+    result.natural = result.max
+    result.max = xhr.response.data.overrideHitPoints===null ? result.natural+xhr.response.data.bonusHitPoints : xhr.response.data.overrideHitPoints // '??' doesn't work in OBS.
+    result.temp = xhr.response.data.temporaryHitPoints
+
+    // The DDB API doesn't recalculate damage when the max HP gets modified/overridden down and the health is supposed to stay the same, so we have to compensate for that.
+    if (!(id in db)) {
+      db[id] = {max_orig: 0, damage_orig: 0, damage_fix: null}
+    }
+    if (db[id].damage_fix===null && xhr.response.data.removedHitPoints==db[id].damage_orig && result.max<db[id].max_orig) {
+      db[id].damage_fix = Math.max(0, db[id].damage_orig+result.max-db[id].max_orig)
+    } else if (db[id].damage_fix!==null && xhr.response.data.removedHitPoints!=db[id].damage_orig) {
+      db[id].damage_fix = null
+    }
+    db[id].max_orig = result.max
+    db[id].damage_orig = xhr.response.data.removedHitPoints
+    result.current = result.max - (db[id].damage_fix===null ? xhr.response.data.removedHitPoints : db[id].damage_fix) // '??' doesn't work in OBS.
+
+    name.innerText = result.name
+    right.innerText = result.current
+    slash.innerText = result.max
+    parenth.innerText = result.natural==result.max ? '' : result.natural
+    plus.innerText = result.temp==0 ? '' : result.temp
+
+    let ch_col = [null, 0]
+    for (const [col, score] of Object.entries({'#f00|#0f0': result.current - current, '#000|#0ff': result.max - max, 'rgba(255, 255, 255, 0.3)|#fea': result.natural - natural, '#f0c|#96f': result.temp - temp})) {
+      if (score != 0) {
+        const ascore = Math.abs(score)
+        if (ascore > ch_col[1]) {
+          ch_col = [col.split('|')[score>0 ? 1 : 0], ascore]
+        }
+      }
+    }
+    ch_col = ch_col[0]
+    current = result.current
+    max = result.max
+    natural = result.natural
+    temp = result.temp
+    let val = max/natural
+    hpavail.style.width = `${100*val}%`
+    if (ch_col !== null) {
+      hpavail.style.boxShadow = 'inset 0 0.1em 0.1em rgba(0, 0, 0, 40%), inset 0 -0.1em 0.1em rgba(255, 255, 255, 80%)' + (ch_col!==null ? `, 0 0 0.5em 0.3em ${ch_col}` : '')
+      hpavail.offsetHeight;
+      window.setTimeout(function() {
+        hpavail.style.boxShadow = 'inset 0 0.1em 0.1em rgba(0, 0, 0, 40%), inset 0 -0.1em 0.1em rgba(255, 255, 255, 80%)'
+        hpavail.offsetHeight;
+      }, 200)
+    }
+    hpmark.style.opacity = val > 1 ? 1 : 0;
+    const over = val > 1
+    window.setTimeout(function() {
+      const val = hpshadow.clientWidth + 3
+      hpavail.style.backgroundImage = `linear-gradient(to top, rgba(255, 255, 255, 20%) 0%, rgba(0, 0, 0, 20%) 100%), linear-gradient(90deg, #899 ${val-2}px, #${over ? 'db6' : 899} ${val+2}px)`
+    }, 500)
+    val = current / natural
+    hpcurrent.style.width = `${100*val}%`
+    hpcurrent.style.backgroundColor = `hsl(${120*val}, 95%, 60%)`
+    hptemp.style.marginLeft = `${100*val - (current ? 2 : 0)}%`
+    hptemp.style.width = `${100*temp/natural}%`
+
+    row.classList.remove('beat')
+    row.offsetHeight // Forces a redraw.
+    row.classList.add('beat')
+    send()
+  })
+  xhr.addEventListener('timeout', xhr.send)
+  send()
+})
+
+    </script>
+  </body>
+</html>

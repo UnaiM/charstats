@@ -1,22 +1,8 @@
-charstats (WIP)
-===============
+charstats
+=========
 
 **Dynamic [D&D Beyond](https://dndbeyond.com) character health overlay for streaming**
 
-To be hosted on a server with PHP (cURL and MySQLi required) and MySQL. It needs a **sqlcred.json** file with the following structure:
-
-```json
-{
-  "host": "host.name.here",
-  "username": "user_name",
-  "password": "P4$sw0Rd",
-  "dbname": "database_name"
-}
-```
-
-The database it points to, should contain a table named **stats** (InnoDB), with the following columns:
-
-* **id:** integer, not null
-* **max_orig:** integer, not null
-* **damage_orig:** integer, not null
-* **damage_fix:** integer, null by default
+Massive thanks:
+* [Roll20 API Scripts](https://github.com/RobinKuiper/Roll20APIScripts), for figuring out how to get a character’s natural max HP.
+* [CORS Anywhere](https://github.com/Rob--W/cors-anywhere) and its [live version at herokuapp](https://cors-anywhere.herokuapp.com), for making querying the DDB API possible without having to set up a server.
