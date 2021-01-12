@@ -35,6 +35,8 @@ td {
   height: 70px;
   overflow: hidden;
   padding: 0;
+  -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 90%, transparent 100%);
 }
 .hpshadow {
   width: 40%;
@@ -47,14 +49,30 @@ td {
   top: 40%;
   margin: 0;
 }
-.hpavail {
+.hpavail, .glow {
   width: 100%;
   height: 100%;
 	border-radius: 9999em;
-	padding: 0.1em;
+}
+.hpavail {
+  padding: 0.1em;
   margin: -0.2em;
   border: 0.1em solid transparent;
-  transition: width 0.5s, box-shadow: 0.5s;
+  box-shadow: inset 0 0.1em 0.1em rgba(0, 0, 0, 40%), inset 0 -0.1em 0.1em rgba(255, 255, 255, 80%);
+  transition: width 0.5s;
+}
+@keyframes glow {
+  from {opacity: 100%;}
+  to {opacity: 0;}
+}
+.glow {
+  position: absolute;
+  top: -0.2em;
+  left: -0.2em;
+  padding: 0.18em;
+  opacity: 0;
+  animation-name: glow;
+  animation-duration: 1.5s;
 }
 .hpmark {
   position: absolute;
@@ -146,28 +164,28 @@ function findObjs() {
   return [result]
 }
 
-// https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L27-L28
+// https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L27-L28 ---------------------------
 const _ABILITIES = {1:'STR',2:'DEX',3:'CON',4:'INT',5:'WIS',6:'CHA'};
 const _ABILITY = {'STR': 'strength', 'DEX': 'dexterity', 'CON': 'constitution', 'INT': 'intelligence', 'WIS': 'wisdom', 'CHA': 'charisma'}
-// ------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 function get_level(character) {
 
-  // https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L433-L438
+  // https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L433-L438 -----------------------
   let total_level = 0;
   let monk_level = 0;
   if(state[state_name][beyond_caller.id].config.imports.classes) {
       let multiclasses = {};
       character.classes.forEach((current_class, i) => {
           total_level += current_class.level;
-  // --------------------------------------------------------------------------------------------------------------------------
+  // --------------------------------------------------------------------------------------------------------------------------------------------------
 
       })
   }
   return total_level
 }
 
-// https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L1257-L1296
+// https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L1257-L1296 -----------------------
 const loadHitPoints = (character, total_level) => {
     let hp = Math.floor(character.baseHitPoints + ( total_level * Math.floor( ( ( getTotalAbilityScore(character, 3) - 10 ) / 2 ) ) ) );
 
@@ -208,9 +226,9 @@ const loadHitPoints = (character, total_level) => {
         hpAttr.set('max', hp);
     }
 }
-// ----------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------------------------------------------
 
-// https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L1835-L1879
+// https://github.com/RobinKuiper/Roll20APIScripts/blob/beyondimporter_0_4_0/BeyondImporter_5eOGL/BeyondImporter.js#L1835-L1879 -----------------------
 const getTotalAbilityScore = (character, scoreId) => {
     let index = scoreId-1;
     let base = (character.stats[index].value == null ? 10 : character.stats[index].value),
@@ -256,7 +274,7 @@ const getObjects = (obj, key, val, except) => {
     }
     return objects;
 };
-// ----------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------------------------------------------
 
 let ids = []
 for (const val of new URLSearchParams(window.location.search).entries()) {
@@ -285,6 +303,9 @@ ids.forEach((id) => {
   const hpavail = document.createElement('div')
   hpavail.classList.add('hpavail')
   hpshadow.appendChild(hpavail)
+  const glow = document.createElement('div')
+  glow.classList.add('glow')
+  hpshadow.appendChild(glow)
   const hpcurrent = document.createElement('div')
   hpcurrent.classList.add('hpcurrent')
   hpshadow.appendChild(hpcurrent)
@@ -312,7 +333,6 @@ ids.forEach((id) => {
 
   const xhr = new XMLHttpRequest();
   xhr.responseType = 'json'
-  xhr.timeout = 10000
 
   let send_ = true
   function send() {
@@ -323,10 +343,15 @@ ids.forEach((id) => {
         window.setTimeout(function() {
           send_ = true
         }, 2000)
-        xhr.open('GET', `https://cors-anywhere.herokuapp.com/https://character-service.dndbeyond.com/character/v4/character/${id}`)
+        const url = `https://character-service.dndbeyond.com/character/v4/character/${id}?${new Date().getTime()}`
+        xhr.open('GET', 'fetch.php?url='+encodeURIComponent(url))
+        xhr.timeout = 4000
+        xhr.setRequestHeader('Accept', 'application/json')
+        xhr.setRequestHeader('Cache-Control', 'no-cache')
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
         xhr.send()
       }
-    }, 200)
+    }, 20)
   }
 
   let current = null
@@ -375,13 +400,12 @@ ids.forEach((id) => {
     temp = result.temp
     let val = max/natural
     hpavail.style.width = `${100*val}%`
+    glow.style.width = `${100*val}%`
     if (ch_col !== null) {
-      hpavail.style.boxShadow = 'inset 0 0.1em 0.1em rgba(0, 0, 0, 40%), inset 0 -0.1em 0.1em rgba(255, 255, 255, 80%)' + (ch_col!==null ? `, 0 0 0.5em 0.3em ${ch_col}` : '')
-      hpavail.offsetHeight;
-      window.setTimeout(function() {
-        hpavail.style.boxShadow = 'inset 0 0.1em 0.1em rgba(0, 0, 0, 40%), inset 0 -0.1em 0.1em rgba(255, 255, 255, 80%)'
-        hpavail.offsetHeight;
-      }, 200)
+      glow.style.boxShadow = `0 0 1.4em 0 ${ch_col}`
+      glow.classList.remove('glow')
+      glow.offsetHeight // Forces a redraw.
+      glow.classList.add('glow')
     }
     hpmark.style.opacity = val > 1 ? 1 : 0;
     const over = val > 1
@@ -391,16 +415,16 @@ ids.forEach((id) => {
     }, 500)
     val = current / natural
     hpcurrent.style.width = `${100*val}%`
-    hpcurrent.style.backgroundColor = `hsl(${120*val}, 95%, 60%)`
+    hpcurrent.style.backgroundColor = `hsl(${120*Math.min(val, 2.5)}, 95%, 60%)`
     hptemp.style.marginLeft = `${100*val - (current ? 2 : 0)}%`
     hptemp.style.width = `${100*temp/natural}%`
 
     row.classList.remove('beat')
     row.offsetHeight // Forces a redraw.
     row.classList.add('beat')
-    send()
   })
-  xhr.addEventListener('timeout', xhr.send)
+  xhr.addEventListener('loadend', send)
+  xhr.addEventListener('timeout', send)
   send()
 })
 
