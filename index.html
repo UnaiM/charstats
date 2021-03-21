@@ -62,8 +62,8 @@ td {
   transition: width 0.5s;
 }
 @keyframes glow {
-  from {opacity: 100%;}
-  to {opacity: 0;}
+  from {opacity: 1; -webkit-opacity: 1;} /* OBS requires the -webkit prefix. */
+  to {opacity: 0; -webkit-opacity: 0;} /* OBS requires the -webkit prefix. */
 }
 .glow {
   position: absolute;
@@ -385,7 +385,8 @@ ids.forEach((id) => {
     plus.innerText = result.temp==0 ? '' : result.temp
 
     let ch_col = [null, 0]
-    for (const [col, score] of Object.entries({'#f00|#0f0': result.current - current, '#000|#0ff': result.max - max, 'rgba(255, 255, 255, 0.3)|#fea': result.natural - natural, '#f0c|#96f': result.temp - temp})) {
+    // http://hclwizard.org:3000/hclcolorpicker
+    for (const [col, score] of Object.entries({'#FE9D82|#7FC953': result.current - current, '#000|#fff': result.max - max, 'rgba(255, 255, 255, 0.5)|rgba(255, 255, 255, 0.5)': result.natural - natural, '#E997FD|#08C4FB': result.temp - temp})) {
       if (score != 0) {
         const ascore = Math.abs(score)
         if (ascore > ch_col[1]) {
@@ -402,7 +403,7 @@ ids.forEach((id) => {
     hpavail.style.width = `${100*val}%`
     glow.style.width = `${100*val}%`
     if (ch_col !== null) {
-      glow.style.boxShadow = `0 0 1.4em 0 ${ch_col}`
+      glow.style.boxShadow = `0 0 1em 0.4em ${ch_col}`
       glow.classList.remove('glow')
       glow.offsetHeight // Forces a redraw.
       glow.classList.add('glow')
